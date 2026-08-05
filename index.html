@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Calendar — 나만의 캘린더</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📘</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-icon">✦</span>
+        <div class="brand-text">
+          <h1>My Calendar</h1>
+          <p>나만의 캘린더</p>
+        </div>
+      </div>
+
+      <div class="date-nav">
+        <button id="prevMonth" class="nav-btn" aria-label="이전 달">‹</button>
+        <div class="current-month" id="currentMonth">2026년 8월</div>
+        <button id="nextMonth" class="nav-btn" aria-label="다음 달">›</button>
+        <button id="todayBtn" class="today-btn">오늘</button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="calendar-panel">
+        <div class="weekdays">
+          <span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </section>
+
+      <aside class="side-panel">
+        <div class="selected-date-header">
+          <h2 id="selectedDateLabel">8월 5일 수요일</h2>
+          <p id="selectedDateSub"></p>
+        </div>
+
+        <div class="tab-switch" role="tablist">
+          <button class="tab-btn active" data-tab="todo" role="tab">
+            <span class="tab-icon">✓</span> 할 일
+          </button>
+          <button class="tab-btn" data-tab="memo" role="tab">
+            <span class="tab-icon">✎</span> 메모
+          </button>
+        </div>
+
+        <div class="tab-content" id="todoTab">
+          <form id="todoForm" class="todo-form" autocomplete="off">
+            <input type="text" id="todoInput" placeholder="할 일을 입력하세요" maxlength="200" />
+            <button type="submit" class="add-btn" aria-label="추가">+</button>
+          </form>
+          <ul class="todo-list" id="todoList"></ul>
+          <p class="empty-hint" id="todoEmptyHint">이 날의 할 일이 없습니다.</p>
+          <div class="todo-progress" id="todoProgress"></div>
+        </div>
+
+        <div class="tab-content hidden" id="memoTab">
+          <textarea id="memoText" class="memo-text" placeholder="이 날의 메모를 자유롭게 남겨보세요..."></textarea>
+          <div class="memo-footer">
+            <span class="save-indicator" id="saveIndicator">저장됨</span>
+            <span class="char-count" id="charCount">0자</span>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="app-footer">
+      <p>모든 데이터는 이 브라우저에만 안전하게 저장됩니다.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
