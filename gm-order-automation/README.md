@@ -1,22 +1,49 @@
 # GM 발주 자동화
 
-버튼 클릭 한 번으로 **문서 파일(엑셀/CSV/HTML) 불러오기 → Excel 현황 생성 → DB 반영**까지
-자동으로 처리하는 데스크톱 GUI 프로그램입니다.
+**문서 파일(엑셀/CSV/HTML) 불러오기 → Excel 현황 생성 → DB 반영**까지 자동으로 처리하는
+프로그램입니다. 매월 원본 데이터 파일만 새로 넣고 실행하면 그때그때의 결과 파일(Excel)과
+누적 DB가 자동으로 만들어지는 용도입니다. GUI 앱(`main.py`)과, 명령어로 바로 실행하는
+CLI 스크립트(`run.py`) 두 가지 방식을 모두 제공합니다.
 
-> GM SupplyPower 사이트에 직접 로그인해 문서를 조회/다운로드하는 기능은 포함하지 않습니다.
-> 실제 사이트의 로그인 폼·조회 화면 구조(선택자, URL 등)를 알 수 없어 정확한 자동화 코드를
-> 작성할 수 없기 때문입니다. 대신 GM SupplyPower에서 **미리 다운로드해 둔 문서 파일**을
-> 프로그램에 넣어주면, 그 이후 과정(집계 → Excel → DB)을 자동으로 처리합니다.
-> 사이트 자동 로그인/조회까지 필요하시면 실제 로그인 화면과 문서 목록 화면의 스크린샷 또는
-> HTML을 알려주세요. `core/` 아래에 `login.py` 같은 자동화 단계를 추가로 붙일 수 있습니다.
+> GM SupplyPower 사이트에 직접 로그인해 문서를 조회/다운로드하는 기능은 아직 포함하지
+> 않았습니다 (나중에 추가 예정). 실제 사이트의 로그인 폼·조회 화면 구조(선택자, URL 등)를
+> 알 수 없어 정확한 자동화 코드를 작성할 수 없기 때문입니다. 대신 GM SupplyPower에서
+> **미리 다운로드해 둔 문서 파일**을 프로그램에 넣어주면, 그 이후 과정(집계 → Excel → DB)을
+> 자동으로 처리합니다. 사이트 자동 로그인/조회까지 필요하시면 실제 로그인 화면과 문서 목록
+> 화면의 스크린샷 또는 HTML을 알려주세요. `core/` 아래에 `login.py` 같은 자동화 단계를
+> 추가로 붙일 수 있습니다.
 
-## 실행 방법
+## 설치
 
 ```bash
 cd gm-order-automation
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+```
+
+## 방법 1. 명령어(CLI)로 실행 — 매월 반복 실행용
+
+이번 달 원본 파일을 `data/downloads/` 폴더에 넣고 인자 없이 실행하면, 폴더 안의 모든
+지원 파일(`.xlsx/.xls/.csv/.htm/.html`)을 자동으로 찾아 처리합니다.
+
+```bash
+python run.py
+```
+
+특정 파일만 지정하려면 경로를 인자로 넘깁니다.
+
+```bash
+python run.py 2026년8월_발주내역.xlsx 추가분.csv
+```
+
+실행하면 콘솔에 `[1/4] 파일 읽기 → [2/4] 데이터 검증 → [3/4] Excel 생성 → [4/4] DB 반영`
+순서로 진행 상황이 출력되고, `data/exports/`에 결과 Excel이, `data/gm_orders.db`에 누적
+데이터가 반영됩니다. Windows에서는 `run.bat`을 더블클릭해도 동일하게 실행됩니다.
+
+## 방법 2. GUI 앱으로 실행
+
+```bash
 python main.py
 ```
 
@@ -48,7 +75,9 @@ python main.py
 
 ```
 gm-order-automation/
-  main.py                 # 앱 진입점
+  main.py                 # GUI 앱 진입점
+  run.py                   # CLI 실행 스크립트 (매월 반복 실행용)
+  run.bat                   # Windows용 run.py 더블클릭 실행기
   config/
     settings.py            # 경로/상수
     column_mapping.json     # 입력 파일 헤더 -> 표준 필드 매핑
