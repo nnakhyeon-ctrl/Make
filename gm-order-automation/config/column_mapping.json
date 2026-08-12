@@ -1,0 +1,10 @@
+{
+  "doc_no": ["문서번호", "발주번호", "주문번호", "PO", "PO번호", "Order No", "PO Number", "PO No", "Document No"],
+  "partner": ["거래처", "공급처", "업체명", "매입처", "Supplier", "Vendor", "Partner"],
+  "item": ["품목", "품번", "자재", "자재번호", "Item", "Part No", "Material", "Part Number"],
+  "item_name": ["품명", "품목명", "자재명", "Item Name", "Description"],
+  "qty": ["수량", "발주수량", "주문수량", "Qty", "Quantity", "Order Qty"],
+  "order_date": ["발주일", "일자", "주문일", "등록일", "Order Date", "Date"],
+  "due_date": ["납기일", "입고예정일", "Due Date", "Delivery Date"],
+  "status": ["상태", "처리상태", "진행상태", "Status"]
+}
