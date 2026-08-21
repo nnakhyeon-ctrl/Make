@@ -207,27 +207,24 @@ def replace_cell_in_row(row_full_text, row_num, col_letter, new_value):
     return row_full_text[: m.start()] + new_cell + row_full_text[m.end():]
 
 
-def main():
-    ap = argparse.ArgumentParser(description="유상사급 일별 출고수량 채우기")
-    ap.add_argument("input", help="유상사급 시트가 든 xlsx(채울 대상 템플릿)")
-    ap.add_argument("--source", help="Sheet1(원본)이 든 별도 xlsx. 생략 시 input 파일 안에서 찾음.")
-    ap.add_argument("--output", help="결과 저장 경로. 생략 시 원본명_filled.xlsx")
-    ap.add_argument("--src-sheet", default=SRC_SHEET_DEFAULT, help=f"원본 시트명(기본 {SRC_SHEET_DEFAULT})")
-    ap.add_argument("--dst-sheet", default=DST_SHEET_DEFAULT, help=f"템플릿 시트명(기본 {DST_SHEET_DEFAULT})")
-    args = ap.parse_args()
+def run_fill(input_path, source_path=None, output_path=None,
+             src_sheet=SRC_SHEET_DEFAULT, dst_sheet=DST_SHEET_DEFAULT):
+    """핵심 로직. CLI(main)와 GUI(gui.py)가 공용으로 호출한다.
+    실패하면 RuntimeError(한글 메시지)를 던진다.
+    성공하면 (report_lines: list[str], out_path: str) 를 반환한다."""
 
-    if not os.path.exists(args.input):
-        sys.exit(f"입력 파일이 없습니다: {args.input}")
+    if not os.path.exists(input_path):
+        raise RuntimeError(f"입력 파일이 없습니다: {input_path}")
 
-    src_path = args.source if args.source else args.input
+    src_path = source_path if source_path else input_path
     if not os.path.exists(src_path):
-        sys.exit(f"원본 파일이 없습니다: {src_path}")
+        raise RuntimeError(f"원본 파일이 없습니다: {src_path}")
 
     with zipfile.ZipFile(src_path) as zsrc:
         shared_src = load_shared_strings(zsrc)
-        src_sheet_path, src_names = sheet_path_for_name(zsrc, args.src_sheet)
+        src_sheet_path, src_names = sheet_path_for_name(zsrc, src_sheet)
         if src_sheet_path is None:
-            sys.exit(f"원본 시트 '{args.src_sheet}'를 찾지 못했습니다. 있는 시트: {src_names}")
+            raise RuntimeError(f"원본 시트 '{src_sheet}'를 찾지 못했습니다. 있는 시트: {src_names}")
         src_xml = zsrc.read(src_sheet_path).decode("utf-8")
 
     # ---- 1) 원본에서 (인도처, 자재, 일) -> 출고수량 합산 ----
@@ -252,11 +249,11 @@ def main():
         used_rows += 1
 
     # ---- 2) 템플릿 로드 ----
-    with zipfile.ZipFile(args.input) as ztpl:
+    with zipfile.ZipFile(input_path) as ztpl:
         shared_dst = load_shared_strings(ztpl)
-        dst_sheet_path, dst_names = sheet_path_for_name(ztpl, args.dst_sheet)
+        dst_sheet_path, dst_names = sheet_path_for_name(ztpl, dst_sheet)
         if dst_sheet_path is None:
-            sys.exit(f"템플릿 시트 '{args.dst_sheet}'를 찾지 못했습니다. 있는 시트: {dst_names}")
+            raise RuntimeError(f"템플릿 시트 '{dst_sheet}'를 찾지 못했습니다. 있는 시트: {dst_names}")
         dst_xml = ztpl.read(dst_sheet_path).decode("utf-8")
 
     # ---- 3) 템플릿 머리글 행 감지 ----
@@ -271,7 +268,7 @@ def main():
             hdr_row, hdr_c, hdr_e = rownum, c, e
             break
     if hdr_row is None:
-        sys.exit(f"템플릿 '{args.dst_sheet}'에서 인도처/자재 머리글 행을 찾지 못했습니다.")
+        raise RuntimeError(f"템플릿 '{dst_sheet}'에서 인도처/자재 머리글 행을 찾지 못했습니다.")
 
     # ---- 4) 템플릿 데이터 행의 일자 칸(N~AR) 채우기 ----
     data_rows = 0
@@ -310,14 +307,14 @@ def main():
     new_dst_xml = ROW_SPLIT_RE.sub(process_row, dst_xml)
 
     # ---- 5) 저장: 템플릿 zip을 그대로 복사하고 시트 XML 한 항목만 교체 ----
-    if args.output:
-        out_path = args.output
+    if output_path:
+        out_path = output_path
     else:
-        stem, ext = os.path.splitext(args.input)
+        stem, ext = os.path.splitext(input_path)
         out_path = f"{stem}_filled{ext or '.xlsx'}"
 
     tmp_path = out_path + ".tmp"
-    with zipfile.ZipFile(args.input, "r") as zin, zipfile.ZipFile(tmp_path, "w", zipfile.ZIP_DEFLATED) as zout:
+    with zipfile.ZipFile(input_path, "r") as zin, zipfile.ZipFile(tmp_path, "w", zipfile.ZIP_DEFLATED) as zout:
         for item in zin.infolist():
             data = zin.read(item.filename)
             if item.filename == dst_sheet_path:
@@ -325,35 +322,58 @@ def main():
             zout.writestr(item, data)
     os.replace(tmp_path, out_path)
 
-    # ---- 6) 콘솔 요약 ----
+    # ---- 6) 요약 리포트 ----
     total_src_qty = sum(sums.values())
     filled_qty = sum(sums[k] for k in matched_keys)
     unmatched_keys = [k for k in sums if k not in matched_keys]
-    print("=" * 60)
-    print("유상사급 일별 출고수량 채우기 완료")
-    print("=" * 60)
-    print(f"원본 시트           : {args.src_sheet}")
-    print(f"템플릿 시트         : {args.dst_sheet}  "
-          f"(일자 칸 {col_idx_to_letter(DAY_COL_BASE+DAY_MIN)}~{col_idx_to_letter(DAY_COL_BASE+DAY_MAX)})")
-    print(f"원본 사용 행(날짜有) : {used_rows}")
-    print(f"원본 제외(날짜無)   : {skipped_nondate}  (소계/합계/머리글)")
+    lines = []
+    lines.append("=" * 60)
+    lines.append("유상사급 일별 출고수량 채우기 완료")
+    lines.append("=" * 60)
+    lines.append(f"원본 시트           : {src_sheet}")
+    lines.append(f"템플릿 시트         : {dst_sheet}  "
+                  f"(일자 칸 {col_idx_to_letter(DAY_COL_BASE+DAY_MIN)}~{col_idx_to_letter(DAY_COL_BASE+DAY_MAX)})")
+    lines.append(f"원본 사용 행(날짜有) : {used_rows}")
+    lines.append(f"원본 제외(날짜無)   : {skipped_nondate}  (소계/합계/머리글)")
     if skipped_nokey:
-        print(f"원본 제외(키無)     : {skipped_nokey}  (인도처/자재 공백)")
-    print(f"집계 키 수          : {len(sums)}  (인도처+자재+일)")
-    print(f"템플릿 데이터 행    : {data_rows}")
-    print(f"매칭 기입 셀        : {matched_cells}")
-    print(f"0 기입 셀           : {zero_cells}")
-    print(f"원본 총 출고수량    : {tidy_qty(total_src_qty)}")
-    print(f"템플릿 기입 수량합  : {tidy_qty(filled_qty)}")
+        lines.append(f"원본 제외(키無)     : {skipped_nokey}  (인도처/자재 공백)")
+    lines.append(f"집계 키 수          : {len(sums)}  (인도처+자재+일)")
+    lines.append(f"템플릿 데이터 행    : {data_rows}")
+    lines.append(f"매칭 기입 셀        : {matched_cells}")
+    lines.append(f"0 기입 셀           : {zero_cells}")
+    lines.append(f"원본 총 출고수량    : {tidy_qty(total_src_qty)}")
+    lines.append(f"템플릿 기입 수량합  : {tidy_qty(filled_qty)}")
     if abs(total_src_qty - filled_qty) > 1e-6:
-        print(f"  ※ 차이 {tidy_qty(total_src_qty - filled_qty)} — 템플릿에 없는 (인도처+자재) 키가 있음")
+        lines.append(f"  ※ 차이 {tidy_qty(total_src_qty - filled_qty)} — 템플릿에 없는 (인도처+자재) 키가 있음")
         for (ind, mat, day) in sorted(unmatched_keys)[:20]:
-            print(f"     미매칭 원본키: 인도처={ind} / 자재={mat} / {day}일 = {tidy_qty(sums[(ind,mat,day)])}")
+            lines.append(f"     미매칭 원본키: 인도처={ind} / 자재={mat} / {day}일 = {tidy_qty(sums[(ind,mat,day)])}")
         if len(unmatched_keys) > 20:
-            print(f"     ... 외 {len(unmatched_keys)-20}건")
+            lines.append(f"     ... 외 {len(unmatched_keys)-20}건")
     else:
-        print("  ✓ 원본 총량과 템플릿 기입 총량 일치")
-    print(f"\n저장: {out_path}")
+        lines.append("  ✓ 원본 총량과 템플릿 기입 총량 일치")
+    lines.append(f"\n저장: {out_path}")
+
+    return lines, out_path
+
+
+def main():
+    ap = argparse.ArgumentParser(description="유상사급 일별 출고수량 채우기")
+    ap.add_argument("input", help="유상사급 시트가 든 xlsx(채울 대상 템플릿)")
+    ap.add_argument("--source", help="Sheet1(원본)이 든 별도 xlsx. 생략 시 input 파일 안에서 찾음.")
+    ap.add_argument("--output", help="결과 저장 경로. 생략 시 원본명_filled.xlsx")
+    ap.add_argument("--src-sheet", default=SRC_SHEET_DEFAULT, help=f"원본 시트명(기본 {SRC_SHEET_DEFAULT})")
+    ap.add_argument("--dst-sheet", default=DST_SHEET_DEFAULT, help=f"템플릿 시트명(기본 {DST_SHEET_DEFAULT})")
+    args = ap.parse_args()
+
+    try:
+        lines, _out_path = run_fill(
+            args.input, source_path=args.source, output_path=args.output,
+            src_sheet=args.src_sheet, dst_sheet=args.dst_sheet,
+        )
+    except RuntimeError as e:
+        sys.exit(str(e))
+
+    print("\n".join(lines))
 
 
 if __name__ == "__main__":
