@@ -1,79 +1,86 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Calendar — 나만의 캘린더</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📘</text></svg>" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<title>유상사급 출고수량 채우기</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Malgun Gothic','Segoe UI',sans-serif;background:#c0c0c0;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.w{width:460px;box-shadow:3px 3px 10px rgba(0,0,0,.3)}
+.t{background:linear-gradient(180deg,#0a246a,#3a6ea5);color:#fff;font-size:13px;font-weight:700;padding:5px 10px;border-radius:4px 4px 0 0;display:flex;align-items:center;gap:6px}
+.t .i{width:16px;height:16px;background:#fc0;border:1px solid #c90;border-radius:2px;font-size:9px;text-align:center;line-height:16px;color:#800;font-weight:900}
+.tb{display:flex;background:#ece9d8;padding:6px 6px 0;border-bottom:1px solid #aaa}
+.tb div{padding:5px 14px;font-size:13px;font-weight:700;background:#fff;border:1px solid #aaa;border-bottom:1px solid #fff;border-radius:3px 3px 0 0;margin-bottom:-1px}
+.b{background:#f5f5c8;padding:16px;border:1px solid #aaa;border-top:none;border-radius:0 0 4px 4px}
+.fl{display:inline-block;padding:6px 16px;margin-bottom:14px;font-size:13px;font-weight:700;background:#fce94f;border:1px solid #c0a000;border-radius:3px}
+.dz{border:2px dashed #999;border-radius:6px;padding:24px;text-align:center;cursor:pointer;background:#fffde8;margin-bottom:12px}
+.dz:hover{border-color:#0055a4}
+.lg{background:#fff;border:1px solid #bbb;border-radius:4px;padding:10px;font-size:12px;line-height:1.8;margin-bottom:12px;max-height:180px;overflow-y:auto;display:none}
+.dl{width:100%;padding:12px 0;font-size:14px;font-weight:700;background:#0055a4;color:#fff;border:none;border-radius:4px;cursor:pointer;display:none}
+.dl:hover{background:#003d7a}
+</style>
 </head>
 <body>
-  <div class="app">
-    <header class="app-header">
-      <div class="brand">
-        <span class="brand-icon">✦</span>
-        <div class="brand-text">
-          <h1>My Calendar</h1>
-          <p>나만의 캘린더</p>
-        </div>
-      </div>
-
-      <div class="date-nav">
-        <button id="prevMonth" class="nav-btn" aria-label="이전 달">‹</button>
-        <div class="current-month" id="currentMonth">2026년 8월</div>
-        <button id="nextMonth" class="nav-btn" aria-label="다음 달">›</button>
-        <button id="todayBtn" class="today-btn">오늘</button>
-      </div>
-    </header>
-
-    <main class="app-main">
-      <section class="calendar-panel">
-        <div class="weekdays">
-          <span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span>
-        </div>
-        <div class="calendar-grid" id="calendarGrid"></div>
-      </section>
-
-      <aside class="side-panel">
-        <div class="selected-date-header">
-          <h2 id="selectedDateLabel">8월 5일 수요일</h2>
-          <p id="selectedDateSub"></p>
-        </div>
-
-        <div class="tab-switch" role="tablist">
-          <button class="tab-btn active" data-tab="todo" role="tab">
-            <span class="tab-icon">✓</span> 할 일
-          </button>
-          <button class="tab-btn" data-tab="memo" role="tab">
-            <span class="tab-icon">✎</span> 메모
-          </button>
-        </div>
-
-        <div class="tab-content" id="todoTab">
-          <form id="todoForm" class="todo-form" autocomplete="off">
-            <input type="text" id="todoInput" placeholder="할 일을 입력하세요" maxlength="200" />
-            <button type="submit" class="add-btn" aria-label="추가">+</button>
-          </form>
-          <ul class="todo-list" id="todoList"></ul>
-          <p class="empty-hint" id="todoEmptyHint">이 날의 할 일이 없습니다.</p>
-          <div class="todo-progress" id="todoProgress"></div>
-        </div>
-
-        <div class="tab-content hidden" id="memoTab">
-          <textarea id="memoText" class="memo-text" placeholder="이 날의 메모를 자유롭게 남겨보세요..."></textarea>
-          <div class="memo-footer">
-            <span class="save-indicator" id="saveIndicator">저장됨</span>
-            <span class="char-count" id="charCount">0자</span>
-          </div>
-        </div>
-      </aside>
-    </main>
-
-    <footer class="app-footer">
-      <p>모든 데이터는 이 브라우저에만 안전하게 저장됩니다.</p>
-    </footer>
+<div class="w">
+ <div class="t"><span class="i">M</span>MENU — 유상사급 출고수량 채우기</div>
+ <div class="tb"><div>구매</div></div>
+ <div class="b">
+  <div class="fl">유상사급 출고수량 채우기</div>
+  <div class="dz" id="dz" onclick="document.getElementById('f').click()">
+   <div style="font-size:26px">📂</div>
+   <div style="font-size:13px;color:#555;margin-top:4px">엑셀 파일을 클릭하여 업로드</div>
+   <div style="font-size:11px;color:#888;margin-top:4px">Sheet1(원본) + 유상사급(입력) .xlsx</div>
   </div>
-
-  <script src="app.js"></script>
+  <input id="f" type="file" accept=".xlsx,.xls" style="display:none">
+  <div class="lg" id="lg"></div>
+  <button class="dl" id="dl">📥 결과 파일 다운로드</button>
+ </div>
+</div>
+<script>
+var blob=null,rname='',lg=document.getElementById('lg'),dl=document.getElementById('dl'),fi=document.getElementById('f');
+function al(m){lg.style.display='block';lg.innerHTML+='<div>'+m+'</div>';lg.scrollTop=lg.scrollHeight}
+fi.onchange=function(){if(fi.files[0])run(fi.files[0]);fi.value=''};
+dl.onclick=function(){if(!blob)return;var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=rname;a.click();URL.revokeObjectURL(a.href)};
+function run(file){
+ lg.innerHTML='';lg.style.display='none';dl.style.display='none';blob=null;
+ al('파일 읽는 중: '+file.name);
+ rname=file.name.replace(/\.xlsx?$/i,'')+'_결과.xlsx';
+ var rd=new FileReader();
+ rd.onload=function(e){try{
+  var wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+  var sn=null,tn=null;
+  for(var i=0;i<wb.SheetNames.length;i++){if(/sheet1/i.test(wb.SheetNames[i]))sn=wb.SheetNames[i];if(wb.SheetNames[i].indexOf('유상사급')>=0)tn=wb.SheetNames[i]}
+  if(!sn)throw new Error('Sheet1 없음');if(!tn)throw new Error('유상사급 없음');
+  al('원본: '+sn+' / 입력: '+tn);
+  var sw=wb.Sheets[sn],tw=wb.Sheets[tn],ec=XLSX.utils.encode_cell,sr=XLSX.utils.decode_range(sw['!ref']),lk={},sc=0,sk=0;
+  for(var r=sr.s.r+1;r<=sr.e.r;r++){
+   var dc=sw[ec({r:r,c:2})];if(!dc||dc.v==null||dc.v===''){sk++;continue}
+   var dy=null,v=dc.v;
+   if(v instanceof Date)dy=v.getDate();
+   else if(typeof v==='number'&&v>30000&&v<70000)dy=new Date((v-25569)*86400000).getDate();
+   else if(typeof v==='string'){var m=v.match(/(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);if(m)dy=parseInt(m[3],10)}
+   if(dy==null||isNaN(dy)||dy<1||dy>31){sk++;continue}
+   var ic=sw[ec({r:r,c:1})],mc=sw[ec({r:r,c:4})],qc=sw[ec({r:r,c:8})];
+   var id=ic?String(ic.v).trim():'',mt=mc?String(mc.v).trim():'',qt=qc?(Number(qc.v)||0):0;
+   if(!id||!mt){sk++;continue}
+   var k=id+'|'+mt+'|'+dy;lk[k]=(lk[k]||0)+qt;sc++}
+  var uk=0;for(var x in lk)uk++;
+  al('원본 유효: '+sc+'건 / 제외: '+sk+'건 / 키: '+uk+'건');
+  var tr=XLSX.utils.decode_range(tw['!ref']),fc=0,zc=0;
+  for(var r2=tr.s.r+1;r2<=tr.e.r;r2++){
+   var ic2=tw[ec({r:r2,c:2})],mc2=tw[ec({r:r2,c:4})];
+   var id2=ic2?String(ic2.v).trim():'',mt2=mc2?String(mc2.v).trim():'';
+   if(!id2||!mt2)continue;
+   for(var d=1;d<=31;d++){var ci=12+d,ad=ec({r:r2,c:ci}),k2=id2+'|'+mt2+'|'+d;
+    if(lk[k2]!=null){tw[ad]={t:'n',v:lk[k2]};fc++}
+    else{var ex=tw[ad];if(!ex||ex.v==null||ex.v===''){tw[ad]={t:'n',v:0};zc++}}}}
+  al('매칭: '+fc+'셀 / 빈칸→0: '+zc+'셀');
+  var out=XLSX.write(wb,{type:'array',bookType:'xlsx'});
+  blob=new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  dl.style.display='block';al('✅ 완료!')
+ }catch(err){al('❌ '+err.message)}};
+ rd.readAsArrayBuffer(file)}
+</script>
 </body>
 </html>
