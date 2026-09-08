@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MES 시스템</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏭</text></svg>" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1e3a5f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MES" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -157,7 +162,7 @@
   <div class="shell">
     <header class="topbar">
       <div class="topbar-brand">MES<span>Manufacturing Execution System</span></div>
-      <div class="topbar-right"><span id="clock"></span></div>
+      <div class="topbar-right"><a href="calendar.html" style="color:var(--c-topbar-text);opacity:0.8;text-decoration:none;margin-right:16px;font-size:13px;">📅 캘린더</a><span id="clock"></span></div>
     </header>
     <div class="body-wrap">
       <nav class="sidebar" id="sidebar"></nav>
@@ -222,6 +227,7 @@
       tick(); setInterval(tick, 30000);
     })();
 
+    // Sidebar
     var sb = document.getElementById("sidebar");
     sb.innerHTML = MENU.map(function(sec, i) {
       return '<div class="menu-group" data-gi="' + i + '">' +
@@ -243,6 +249,7 @@
       a.classList.add("active");
     });
 
+    // Router
     var pages = { "vendor-delivery": renderDelivery, "purchase-delivery": renderDelivery };
 
     function route() {
@@ -344,6 +351,10 @@
 
     window.addEventListener("hashchange", route);
     route();
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").catch(function() {});
+    }
   })();
   </script>
 </body>
