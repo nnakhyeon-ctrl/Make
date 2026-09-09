@@ -1,0 +1,17 @@
+{
+  "saplogon_exe": "C:\\Program Files (x86)\\SAP\\FrontEnd\\SAPgui\\saplogon.exe",
+  "connection_name": "옥천양산자재영업팀",
+  "server_reference": {"application_server": "125.133.17.168", "instance_number": "00", "system_id": "10F"},
+  "client": "110",
+  "accounts": ["50MM-01", "50MM-07"],
+  "shared_user": "20210024",
+  "shared_dialog_title": "[공용ID 사용자]",
+  "shared_user_field": "",
+  "shared_password_field": "",
+  "shared_continue_button": "",
+  "duplicate_cancel_radio": "",
+  "duplicate_cancel_label": "",
+  "duplicate_confirm_button": "",
+  "success_control": "",
+  "server_duplicate_dialog_verified": false
+}
